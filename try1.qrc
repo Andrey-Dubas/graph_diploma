@@ -1,0 +1,8 @@
+<RCC>
+    <qresource prefix="/">
+        <file>model/penguin.3ds</file>
+        <file>model/souz.blend</file>
+        <file>model/Montagne.blend</file>
+        <file>model/MountainLand.blend</file>
+    </qresource>
+</RCC>
