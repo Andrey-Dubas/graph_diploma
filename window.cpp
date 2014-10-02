@@ -20,6 +20,7 @@ Window::Window()
 
 void Window::keyPressEvent(QKeyEvent *event)
 {
+    /*
     if (event->key() == Qt::Key_1)
     {
         this->glWidget->addDistance();
@@ -57,7 +58,7 @@ void Window::keyPressEvent(QKeyEvent *event)
                     );
         break;
     }
-
+    */
     QWidget::keyPressEvent(event);
 }
 

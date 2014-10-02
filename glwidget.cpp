@@ -38,9 +38,9 @@ GLWidget::GLWidget(QVector3D chaserStartPos, QVector2D chaserStartOrientation, Q
     , _environmentPositionFix(0, -100, -100)
     , _environmentOrientationFix(90, QVector3D(0, 0, 1))
 
-    , _cameraDistance(15)
-    //, _cameraOrientation(-1, -0.12)
-    , _cameraOrientation(0, 0)
+    , _cameraDistance(20)
+    , _cameraOrientation(3.14, 0.3)
+
     , _isPressed(false)
 
     , _targetPhyPosition(targetStartPos)
@@ -73,7 +73,7 @@ QSize GLWidget::sizeHint() const
 void GLWidget::initializeGL()
 {
     std::cout << __FUNCTION__ << std::endl;
-    qglClearColor(QColor(50, 50, 50));
+    qglClearColor(QColor(0, 0, 0));
 
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
@@ -85,7 +85,7 @@ void GLWidget::initializeGL()
     getMesh(_targetScene, KTargetModelPath);
 
     getMesh(_environmentScene, KEnvironmentModelPath);
-
+/*
     applyShift(*_targetScene->mainNode(), _targetPositionFix, _targetOrientationFix);
 
     applyShift(*_environmentScene->mainNode(), _environmentPositionFix, _environmentOrientationFix);
@@ -101,23 +101,39 @@ void GLWidget::initializeGL()
 
     builder << QGL::Faceted << centerId;
     _additionalScene.reset(builder.finalizedSceneNode());
+    */
 }
 
+
+/*
+
+orientation in opengl:
+        y
+        |
+        |
+        |
+        |
+        |
+        |_______________z
+       /
+      /
+     /
+    /
+   x
+*/
 void GLWidget::paintGL(QGLPainter *painter)
 {
-    std::cout << __FUNCTION__ << std::endl;
-
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glLoadIdentity();
     glTranslatef(0.0, 0.0, -10.0);
 
-    applyShift(*_targetScene->mainNode(), _targetPhyPosition + _targetPositionFix, targetDiffOrientation());
+    //applyShift(*_targetScene->mainNode(), _targetPhyPosition + _targetPositionFix, targetDiffOrientation());
 
     camera()->setEye(getCamera(_targetPhyPosition, targetDiffOrientation()));
-    camera()->setCenter(getCenter(_targetPhyPosition));
+    //camera()->setCenter(QVector3D(getCenter(_targetPhyPosition));
     QGLSceneNode* mainNode = new QGLSceneNode;
     mainNode->addNode(_targetScene->mainNode());
-    mainNode->addNode(_environmentScene->mainNode());
+    //mainNode->addNode(_environmentScene->mainNode());
 
     mainNode->draw(painter);
 
@@ -140,10 +156,12 @@ void GLWidget::resizeGL(int width, int height)
 
 void GLWidget::mousePressEvent(QMouseEvent *event)
 {
+
     _isPressed = true;
     _lastMousePosition.setX(event->pos().x());
     _lastMousePosition.setY(event->pos().y());
-    QGLView::mousePressEvent(event);
+
+    //QGLView::mousePressEvent(event);
 }
 
 void GLWidget::mouseReleaseEvent(QMouseEvent *event)
@@ -155,8 +173,6 @@ void GLWidget::mouseReleaseEvent(QMouseEvent *event)
 
 void GLWidget::mouseMoveEvent(QMouseEvent *event)
 {
-
-
     if(_isPressed == true)
     {
         float dx = _lastMousePosition.x() - event->pos().x();
@@ -174,8 +190,7 @@ void GLWidget::mouseMoveEvent(QMouseEvent *event)
         repaint();
     }
 
-
-    QGLView::mouseMoveEvent(event);
+    //QGLView::mouseMoveEvent(event);
 }
 
 void GLWidget::applyShift(QGLSceneNode &node, const QVector3D &phyPosition, const QQuaternion &phyOrientation)
@@ -225,25 +240,19 @@ void GLWidget::getMesh(std::auto_ptr<QGLAbstractScene>& scene, const char* path)
 QVector3D GLWidget::getCamera(QVector3D dTargetPos, QVector2D dTargetOrientation)
 {
 
-    float z = _cameraDistance * std::sin(dTargetOrientation.y());
-    float xy = _cameraDistance * std::cos(dTargetOrientation.y());
+    float z = _cameraDistance * std::sin(_cameraOrientation.y());
+    float xy = _cameraDistance * std::cos(_cameraOrientation.y());
 
-    float y = xy * std::sin(dTargetOrientation.x());
-    float x = xy * std::cos(dTargetOrientation.x());
+    float y = xy * std::sin(_cameraOrientation.x());
+    float x = xy * std::cos(_cameraOrientation.x());
 
-    QVector3D phyOrientation(x, y, z);
-
-    QQuaternion qx(_cameraOrientation.x(), QVector3D(1, 0, 0));
-    QQuaternion qy(_cameraOrientation.y(), QVector3D(0, 1, 0));
-
-    //QQuaternion rotation = qx * qy;
-    QVector3D res = phyOrientation;//rotation.rotatedVector(phyOrientation);
+    QVector3D cameraPosition(x, z, y);
 
     std::cout << "Angles: x = " << _cameraOrientation.x() << ", y = " << _cameraOrientation.y() << std::endl;
-    std::cout << "pos: x = " << res.x() << ", y = " << res.y() << ", z = " << res.z()
+    std::cout << "pos: x = " << cameraPosition.x() << ", y = " << cameraPosition.y() << ", z = " << cameraPosition.z()
               << ", distance: " << _cameraDistance << std::endl;
 
-    return res + dTargetPos;
+    return cameraPosition;//res + dTargetPos;
 }
 
 QVector3D GLWidget::getCenter(QVector3D dTargetPos)
